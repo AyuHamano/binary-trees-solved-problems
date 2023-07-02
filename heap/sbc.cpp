@@ -5,13 +5,29 @@
 #include <stdexcept>
 #define N 10001
 using namespace std;
- 
-// Estrutura de dados para armazenar um nó min-heap
+
+
+
+class Processo {
+public:
+    long long int t;
+    long long int c;
+    Processo(){}
+};
+class Comp {
+public:
+    bool operator () (const Processo* p1, const Processo* p2) {
+        return (p1->c > p2->c);
+    }
+};
+bool sortAlg(Processo* p1, Processo* p2){
+    return p1->t < p2->t;
+}
 class PriorityQueue
 {
 private:
     // vector para armazenar elementos de heap
-    vector<int> A;
+    vector<long long int> A;
  
     // retorna o pai de `A[i]`
     // não chame esta função se `i` já for um nó raiz
@@ -86,7 +102,7 @@ public:
     }
  
     // insere a chave no heap
-    void push(int key)
+    void push(long long int key)
     {
         // insere um novo elemento no final do vector
         A.push_back(key);
@@ -97,7 +113,7 @@ public:
     }
  
     // Função para remover um elemento de menor prioridade (presente na raiz)
-    int pop()
+    long long int pop()
     {
         try {
             // se o heap não tiver elementos, lança uma exceção
@@ -109,7 +125,7 @@ public:
  
             // substitui a raiz do heap pelo último elemento
             // do vector
-            int menor = A[0];
+            long long int menor = A[0];
             A[0] = A.back();
             A.pop_back();
  
@@ -124,7 +140,7 @@ public:
     }
  
     // Função para retornar um elemento com a prioridade mais baixa (presente na raiz)
-    int top()
+    long long int top()
     {
         try {
             // se o heap não tiver elementos, lança uma exceção
@@ -135,7 +151,7 @@ public:
             }
  
             // caso contrário, retorna o elemento superior (primeiro)
-            return A.at(0);        // ou return A[0];
+            return A[0];        // ou return A[0];
         }
         // captura e imprime a exceção
         catch (const out_of_range &oor) {
@@ -144,57 +160,51 @@ public:
     }
 };
  
-// Implementação de Min Heap em C++
-int main()
-{
-    int caixa, resto=0, cliente, tempo, indiceCaixa, menorTempo, tempoTotal=0, aux;
-    vector<int>tempoCaixa;
-    vector<int>tempoCliente;
-    vector<int>itemCliente;
-    PriorityQueue caixaLivre, tempoGasto;
-    cin >> caixa;
-    cin >> cliente;
 
-    for(int j=0; j<caixa; j++) {
-        cin >> aux;
-        tempoCaixa.push_back(aux);
-        caixaLivre.push(j);
-        tempoCliente.push_back(0);
-    }
-    for(int k=0; k<cliente; k++) {
-        cin >> aux;
-        itemCliente.push_back(aux);
-        
-    }
-    for(int i=0; i<cliente; i++) {
-        if(caixaLivre.size() != 0) {
-            indiceCaixa = caixaLivre.pop();
-            tempo = itemCliente[i] * tempoCaixa[indiceCaixa]; //o caixa disponivel de menor indice
-            tempoCliente[indiceCaixa] = tempo;
-            tempoGasto.push(tempo);
+
+
+int main(int argc, const char * argv[]) {
+    int n, i;
+    Processo *p;
+    long long int espera, qt, qc;
+    long long int tempoExec;
+    PriorityQueue fc, ft;
+    vector<Processo*> processos;
+    while(cin >> n){
+        espera = 0;
+        tempoExec = 0;
+        processos.clear();
+        for(i = 0; i < n; i++) {
+            p = new Processo();
+            cin >> p->t >> p->c;
+            if(i == 0 || p->t < tempoExec)
+                tempoExec = p->t;
+            processos.push_back(p);
         }
-        else {
-            menorTempo = tempoGasto.pop();
-            for(int s=0; s<tempoCliente.size(); s++) {
-                tempoCliente[s] = abs(tempoCliente[s] - menorTempo);
-                if(tempoCliente[s]==0) caixaLivre.push(s);
-                else tempoGasto.push(tempoCliente[s]);
+        sort(processos.begin(), processos.end(), sortAlg);
+        for(Processo* p : processos){
+            if(p->t > tempoExec) {
+                qt = ft.pop();
+                if(qt <= tempoExec)
+                    espera += tempoExec - qt;
+                else
+                    tempoExec = qt;
+                qc = fc.pop();
+                tempoExec += qc;
             }
-            i--;
-            tempoTotal += menorTempo;
-            //cout << "count --> " << tempoTotal << "\n";
+            fc.push(p->c);
+            ft.push(p->t);
         }
-    }
-    for(int e=0; e< caixa; e++) {
-        if(resto < tempoCliente[e]) {
-            resto = tempoCliente[e];
+        while(!fc.empty()) {
+            qt = ft.pop(); 
+            if(qt <= tempoExec)
+                espera += tempoExec - qt;
+            else
+                tempoExec = qt;
+            qc = fc.pop();
+            tempoExec += qc;
         }
+        cout << espera << endl;
     }
-    //cout << "leftover -->" << resto << "\n";
-    tempoTotal += resto;
-    cout << tempoTotal << "\n";
-    //caixaLivre.imprime();
-    
- 
     return 0;
 }
